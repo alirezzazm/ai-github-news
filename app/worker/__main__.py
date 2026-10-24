@@ -60,6 +60,17 @@ def main() -> None:
     sched.start()
     log.info("scheduler started (%d jobs); tz=%s", len(sched.get_jobs()), settings.timezone)
 
+    # Commands interrupted by a restart go back to the queue
+    with session_scope() as db:
+        from sqlalchemy import select
+
+        from app.models import Command
+
+        for cmd in db.scalars(select(Command).where(Command.status == "running")).all():
+            cmd.status = "queued"
+            cmd.started_at = None
+            log.info("re-queued interrupted command %s (#%d)", cmd.name, cmd.id)
+
     # First full cycle shortly after boot if the DB is empty-ish
     with session_scope() as db:
         from sqlalchemy import func, select
