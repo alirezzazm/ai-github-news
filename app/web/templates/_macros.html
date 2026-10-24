@@ -1,0 +1,85 @@
+{% macro kind_badge(item) -%}
+  <span class="badge kind kind-{{ item.kind }}">{{ KIND_LABELS.get(item.kind, item.kind) }}</span>
+{%- endmacro %}
+
+{% macro lang_dot(lang) -%}
+  {% if lang %}<span class="lang"><i class="dot" data-lang="{{ lang|lower }}"></i>{{ lang }}</span>{% endif %}
+{%- endmacro %}
+
+{% macro stars(item) -%}
+  {% if item.stars %}<span class="meta-stars" title="{{ item.stars|fanum }} ستاره">★ {{ item.stars|compact }}</span>{% endif %}
+  {% if item.stars_delta_day %}<span class="growth up" title="رشد امروز">+{{ item.stars_delta_day|compact }} امروز</span>
+  {% elif item.stars_delta_week %}<span class="growth" title="رشد این هفته">+{{ item.stars_delta_week|compact }} هفته</span>
+  {% elif item.stars_delta_month %}<span class="growth" title="رشد این ماه">+{{ item.stars_delta_month|compact }} ماه</span>{% endif %}
+  {% if 'spike' in (item.flags or []) %}<span class="badge spike" title="جهش ستاره: +{{ item.spike_delta|fanum }} در یک هفته">🚀 جهش</span>{% endif %}
+{%- endmacro %}
+
+{% macro importance(item) -%}
+  {% if item.importance %}<span class="imp imp-{{ item.importance }}" title="اهمیت {{ item.importance|fa }} از ۱۰">{{ item.importance|fa }}</span>{% endif %}
+{%- endmacro %}
+
+{% macro card(item, show_ideas=false) -%}
+<article class="card kind-{{ item.kind }}" data-item-id="{{ item.id }}">
+  <div class="card-head">
+    <div class="card-badges">
+      {{ kind_badge(item) }}
+      {% if item.category %}<a class="badge cat" href="/?category={{ item.category }}">{{ item.category_fa }}</a>{% endif %}
+      {% if item.release_tag %}<span class="badge tag">{{ item.release_tag }}</span>{% endif %}
+      {% if not item.is_translated %}<span class="badge untranslated" title="هنوز با LLM خلاصه نشده">ترجمه نشده</span>{% endif %}
+    </div>
+    <div class="card-tools">
+      {{ importance(item) }}
+      <button class="bm" type="button" data-bookmark="{{ item.id }}" aria-label="نشان کردن" title="نشان کردن">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg>
+      </button>
+    </div>
+  </div>
+  <h3 class="card-title"><a href="/item/{{ item.id }}">{{ item.display_title }}</a></h3>
+  {% if item.title_fa and item.kind != 'github_repo' %}<div class="card-orig" dir="ltr">{{ item.title }}</div>{% endif %}
+  {% if item.kind in ('github_repo','github_release') and item.repo_full_name %}
+    <div class="card-repo" dir="ltr"><a href="{{ item.url }}" target="_blank" rel="noopener">{{ item.repo_full_name }}</a></div>
+  {% endif %}
+  <p class="card-summary">{% if item.summary_fa %}{{ item.summary_fa }}{% else %}<span dir="auto" class="orig">{{ item.original_text|truncate_words(260) }}</span>{% endif %}</p>
+  {% if show_ideas and item.ideas %}
+  <ul class="card-ideas">
+    {% for idea in item.ideas[:2] %}<li><strong>{{ idea.title }}</strong>{% if idea.stack %} <span class="stack">{{ idea.stack }}</span>{% endif %}</li>{% endfor %}
+  </ul>
+  {% endif %}
+  <div class="card-meta">
+    {{ lang_dot(item.language) }}
+    {{ stars(item) }}
+    {% if item.points %}<span title="امتیاز Hacker News">▲ {{ item.points|fa }}</span>{% endif %}
+    {% if item.comments_count %}<a href="{{ item.comments_url or item.url }}" target="_blank" rel="noopener" title="نظرها">💬 {{ item.comments_count|fa }}</a>{% endif %}
+    {% if item.kind == 'rss' and item.source_label %}<span class="src">{{ item.source_label }}</span>{% endif %}
+    <time datetime="{{ (item.published_at or item.first_seen_at).isoformat() }}" title="{{ (item.published_at or item.first_seen_at)|jalali }}">{{ (item.published_at or item.first_seen_at)|ago }}</time>
+  </div>
+  {% if item.tags %}<div class="card-tags">{% for t in item.tags[:6] %}<a href="/?q={{ t|urlencode }}" class="chip">{{ t }}</a>{% endfor %}</div>{% endif %}
+</article>
+{%- endmacro %}
+
+{% macro pagination(filters, pages) -%}
+{% if pages > 1 %}
+<nav class="pagination" aria-label="صفحه‌بندی">
+  {% if filters.page > 1 %}<a class="btn" href="/?{{ filters.as_query(page=filters.page-1) }}">صفحهٔ قبل</a>{% endif %}
+  <span>صفحهٔ {{ filters.page|fa }} از {{ pages|fa }}</span>
+  {% if filters.page < pages %}<a class="btn" href="/?{{ filters.as_query(page=filters.page+1) }}">صفحهٔ بعد</a>{% endif %}
+</nav>
+{% endif %}
+{%- endmacro %}
+
+{% macro ideas_block(item) -%}
+{% if item.ideas %}
+<section class="ideas">
+  <h2>با این چی می‌شه ساخت؟</h2>
+  <ol class="ideas-list">
+    {% for idea in item.ideas %}
+    <li>
+      <h3>{{ idea.title }}</h3>
+      {% if idea.description %}<p>{{ idea.description }}</p>{% endif %}
+      {% if idea.stack %}<div class="stack">پیشنهاد استک: <span dir="auto">{{ idea.stack }}</span></div>{% endif %}
+    </li>
+    {% endfor %}
+  </ol>
+</section>
+{% endif %}
+{%- endmacro %}

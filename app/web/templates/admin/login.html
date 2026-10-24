@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="login-box">
+  <h1>ورود مدیر</h1>
+  {% if error %}<div class="flash flash-error">{{ error }}</div>{% endif %}
+  <form method="post" action="/admin/login" class="form">
+    <input type="hidden" name="next" value="{{ request.query_params.get('next', '/admin') }}">
+    <label>نام کاربری <input type="text" name="username" autocomplete="username" required autofocus></label>
+    <label>رمز <input type="password" name="password" autocomplete="current-password" required></label>
+    <button class="btn primary" type="submit">ورود</button>
+  </form>
+</div>
+{% endblock %}

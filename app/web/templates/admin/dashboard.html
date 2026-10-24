@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block content %}
+{% include "admin/_nav.html" %}
+<h1 class="section-title">پیشخوان مدیریت</h1>
+
+<div class="stats admin-stats">
+  <div class="stat"><b>{{ counts.total|fanum }}</b><span>کل آیتم‌ها</span></div>
+  <div class="stat ok"><b>{{ counts.done|fanum }}</b><span>خلاصه‌شده</span></div>
+  <div class="stat"><b>{{ counts.pending|fanum }}</b><span>در صف LLM</span></div>
+  <div class="stat warn"><b>{{ counts.failed|fanum }}</b><span>ناموفق</span></div>
+  <div class="stat"><b>{{ counts.skipped|fanum }}</b><span>رد‌شده/بدون LLM</span></div>
+  <div class="stat"><b>{{ used_items|fanum }}/{{ limit_items|fanum }}</b><span>آیتم LLM امروز</span></div>
+  <div class="stat"><b>{{ (used_tokens/1000)|round|int|fanum }}k</b><span>توکن امروز (سقف {{ (limit_tokens/1000)|round|int|fanum }}k)</span></div>
+</div>
+
+<div class="admin-grid">
+  <section class="panel">
+    <h2>وضعیت</h2>
+    <ul class="status-list">
+      <li>Worker: {% if worker_alive %}<span class="ok">فعال</span>{% else %}<span class="warn">نشانه‌ای از فعالیت نیست</span>{% endif %} {% if last_worker_seen %}<span class="muted">(آخرین اجرا {{ last_worker_seen|ago }})</span>{% endif %}</li>
+      <li>LLM: {% if providers %}<span class="ok">{{ providers|join('، ') }}</span>{% else %}<span class="warn">هیچ ارائه‌دهنده‌ای تنظیم نشده</span> — <a href="/admin/settings">تنظیم کلید</a>{% endif %}</li>
+      <li>اعلان بله/تلگرام: {% if notify_on %}<span class="ok">فعال</span>{% else %}<span class="muted">تنظیم نشده</span>{% endif %}</li>
+      <li>منابع فعال: {{ sources|selectattr('enabled')|list|length|fa }} از {{ sources|length|fa }} — <a href="/admin/sources">مدیریت</a></li>
+    </ul>
+  </section>
+
+  <section class="panel">
+    <h2>اجرای دستی</h2>
+    <div class="btn-row">
+      <form method="post" action="/admin/run/full_cycle"><button class="btn primary">دور کامل (جمع‌آوری + جهش + LLM)</button></form>
+      <form method="post" action="/admin/run/collect_github"><button class="btn">ترند و جست‌وجوی گیت‌هاب</button></form>
+      <form method="post" action="/admin/run/collect_releases"><button class="btn">ریلیزها</button></form>
+      <form method="post" action="/admin/run/collect_hn"><button class="btn">Hacker News</button></form>
+      <form method="post" action="/admin/run/collect_rss"><button class="btn">فیدها</button></form>
+      <form method="post" action="/admin/run/track_stars"><button class="btn">به‌روزرسانی ستاره‌ها</button></form>
+      <form method="post" action="/admin/run/spikes"><button class="btn">تشخیص جهش</button></form>
+      <form method="post" action="/admin/run/enrich"><button class="btn">خلاصه‌سازی ۴۰ آیتم (خارج از سقف)</button></form>
+      <form method="post" action="/admin/run/editorial"><button class="btn">سرمقالهٔ امروز</button></form>
+      <form method="post" action="/admin/run/digest"><button class="btn">ارسال خلاصهٔ روزانه</button></form>
+      <form method="post" action="/admin/run/cleanup"><button class="btn ghost">پاک‌سازی قدیمی‌ها</button></form>
+    </div>
+    {% if pending_cmds %}
+    <h3>در صف</h3>
+    <ul class="muted">{% for c in pending_cmds %}<li>{{ c.name }} — {{ c.status }} ({{ c.created_at|ago }})</li>{% endfor %}</ul>
+    {% endif %}
+    {% if last_cmds %}
+    <h3>آخرین دستورها</h3>
+    <ul class="small">{% for c in last_cmds %}<li><b>{{ c.name }}</b> <span class="{{ 'ok' if c.status == 'done' else 'warn' }}">{{ c.status }}</span> <span class="muted">{{ c.finished_at|ago if c.finished_at else '' }}</span><div class="mono small muted" dir="ltr">{{ c.result|truncate_words(220) }}</div></li>{% endfor %}</ul>
+    {% endif %}
+  </section>
+</div>
+
+<section class="panel">
+  <h2>آخرین اجراها <a class="small" href="/admin/logs">همه</a></h2>
+  <div class="table-wrap">
+  <table class="table small">
+    <thead><tr><th>کار</th><th>شروع</th><th>مدت</th><th>وضعیت</th><th>پیام / آمار</th></tr></thead>
+    <tbody>
+    {% for r in recent_runs %}
+      <tr>
+        <td>{{ r.job }}</td>
+        <td>{{ r.started_at|ago }}</td>
+        <td class="num">{% if r.finished_at %}{{ ((r.finished_at - r.started_at).total_seconds())|round|int|fa }}s{% else %}…{% endif %}</td>
+        <td><span class="{{ 'ok' if r.status == 'ok' else 'warn' }}">{{ r.status }}</span></td>
+        <td class="mono small" dir="ltr">{{ r.message }} {{ r.stats|tojson if r.stats else '' }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section class="panel">
+  <h2>منابع</h2>
+  <div class="table-wrap">
+  <table class="table small">
+    <thead><tr><th>منبع</th><th>نوع</th><th>وضعیت</th><th>آخرین اجرا</th><th>آیتم</th></tr></thead>
+    <tbody>
+    {% for s in sources %}
+      <tr class="{{ '' if s.enabled else 'muted' }}">
+        <td>{{ s.name }}</td>
+        <td>{{ kind_labels.get(s.kind, s.kind) }}</td>
+        <td>{% if not s.enabled %}غیرفعال{% elif s.last_status == 'ok' %}<span class="ok">سالم</span>{% elif s.last_status == 'error' %}<span class="warn" title="{{ s.last_error }}">خطا</span>{% else %}—{% endif %}</td>
+        <td>{{ s.last_run_at|ago if s.last_run_at else '—' }}</td>
+        <td class="num">{{ s.items_last_run|fa }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</section>
+{% endblock %}

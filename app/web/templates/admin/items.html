@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block content %}
+{% include "admin/_nav.html" %}
+<div class="result-head">
+  <h1 class="section-title">آیتم‌ها (۱۰۰ تای آخر)</h1>
+  <div class="chips">
+    <a class="chip {% if not status %}on{% endif %}" href="/admin/items">همه</a>
+    {% for s in ['pending','done','failed','skipped','none'] %}<a class="chip {% if status == s %}on{% endif %}" href="/admin/items?status={{ s }}">{{ s }}</a>{% endfor %}
+    <a class="chip" href="/admin/items/export.json">خروجی JSON</a>
+  </div>
+</div>
+<div class="table-wrap">
+<table class="table small">
+  <thead><tr><th>#</th><th>نوع</th><th>عنوان</th><th>امتیاز اولیه</th><th>اهمیت</th><th>LLM</th><th>دیده‌شده</th><th></th></tr></thead>
+  <tbody>
+  {% for it in items %}
+    <tr class="{{ 'muted' if it.hidden else '' }}">
+      <td class="num">{{ it.id|fa }}</td>
+      <td>{{ KIND_LABELS.get(it.kind, it.kind) }}</td>
+      <td><a href="/item/{{ it.id }}">{{ it.display_title|truncate_words(80) }}</a>{% if it.hidden %} <span class="badge untranslated">پنهان</span>{% endif %}</td>
+      <td class="num">{{ it.prescore|fanum }}</td>
+      <td class="num">{{ it.importance|fa if it.importance else '—' }}</td>
+      <td><span class="{{ 'ok' if it.enrich_status == 'done' else ('warn' if it.enrich_status == 'failed' else '') }}" title="{{ it.enrich_error }}">{{ it.enrich_status }}</span></td>
+      <td>{{ it.last_seen_at|ago }}</td>
+      <td class="btn-row">
+        <form method="post" action="/admin/items/{{ it.id }}/enrich"><button class="btn small">LLM</button></form>
+        <form method="post" action="/admin/items/{{ it.id }}/hide"><button class="btn small ghost">{{ 'نمایش' if it.hidden else 'پنهان' }}</button></form>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

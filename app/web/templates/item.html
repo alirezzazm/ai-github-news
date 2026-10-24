@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block description %}{{ (item.summary_fa or item.original_text)|truncate_words(160) }}{% endblock %}
+{% block ogtype %}article{% endblock %}
+{% block content %}
+<article class="detail kind-{{ item.kind }}" data-item-id="{{ item.id }}">
+  <div class="detail-head">
+    <div class="card-badges">
+      {{ m.kind_badge(item) }}
+      {% if item.category %}<a class="badge cat" href="/?category={{ item.category }}">{{ item.category_fa }}</a>{% endif %}
+      {% if item.release_tag %}<span class="badge tag">{{ item.release_tag }}</span>{% endif %}
+      {% for f in item.flags or [] %}{% if f.startswith('trending_') and ':' not in f %}<span class="badge flag">{{ {'trending_daily':'ترند روز','trending_weekly':'ترند هفته','trending_monthly':'ترند ماه'}[f] }}</span>{% endif %}{% endfor %}
+      {% if not item.is_translated %}<span class="badge untranslated">ترجمه نشده</span>{% endif %}
+    </div>
+    <div class="card-tools">
+      {{ m.importance(item) }}
+      <button class="bm" type="button" data-bookmark="{{ item.id }}" aria-label="نشان کردن"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg></button>
+      <button class="icon-btn" type="button" data-share data-title="{{ item.display_title }}" aria-label="هم‌رسانی" title="هم‌رسانی"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg></button>
+    </div>
+  </div>
+
+  <h1 class="detail-title">{{ item.display_title }}</h1>
+  {% if item.title_fa %}<div class="detail-orig" dir="ltr">{{ item.title }}</div>{% endif %}
+
+  <div class="detail-meta">
+    {% if item.repo_full_name %}<a dir="ltr" class="repo-link" href="https://github.com/{{ item.repo_full_name }}" target="_blank" rel="noopener">{{ item.repo_full_name }}</a>{% endif %}
+    {{ m.lang_dot(item.language) }}
+    {{ m.stars(item) }}
+    {% if item.forks %}<span title="فورک">⑂ {{ item.forks|compact }}</span>{% endif %}
+    {% if item.points %}<span>▲ {{ item.points|fa }} امتیاز</span>{% endif %}
+    {% if item.comments_count %}<a href="{{ item.comments_url or item.url }}" target="_blank" rel="noopener">💬 {{ item.comments_count|fa }} نظر</a>{% endif %}
+    {% if item.author %}<span dir="ltr">@{{ item.author }}</span>{% endif %}
+    {% if item.raw and item.raw.get('license') %}<span dir="ltr">{{ item.raw.license }}</span>{% endif %}
+    {% if item.repo_created_at %}<span title="تاریخ ساخت ریپو">ساخت: {{ item.repo_created_at|jalali }}</span>{% endif %}
+    <time datetime="{{ (item.published_at or item.first_seen_at).isoformat() }}">{{ (item.published_at or item.first_seen_at)|jalali }}</time>
+    {% if item.source_label %}<span class="src">{{ item.source_label }}</span>{% endif %}
+  </div>
+
+  <div class="detail-actions">
+    <a class="btn primary" href="{{ item.url }}" target="_blank" rel="noopener">مشاهدهٔ منبع ↗</a>
+    {% if item.kind == 'hackernews' and item.comments_url %}<a class="btn" href="{{ item.comments_url }}" target="_blank" rel="noopener">بحث در HN</a>{% endif %}
+    {% if item.repo_full_name %}<a class="btn" href="https://github.com/{{ item.repo_full_name }}/releases" target="_blank" rel="noopener">ریلیزها</a>{% endif %}
+    {% if is_admin %}
+      <form method="post" action="/admin/items/{{ item.id }}/enrich" class="inline"><button class="btn ghost" type="submit">ترجمهٔ مجدد</button></form>
+      <form method="post" action="/admin/items/{{ item.id }}/hide" class="inline"><button class="btn ghost danger" type="submit">پنهان کردن</button></form>
+    {% endif %}
+  </div>
+
+  {% if item.summary_fa %}
+  <section class="summary">
+    <h2>خلاصه</h2>
+    <p>{{ item.summary_fa }}</p>
+  </section>
+  {% elif item.enrich_status in ('pending',) %}
+  <div class="notice">این آیتم در صف خلاصه‌سازی با LLM است.</div>
+  {% elif item.enrich_status == 'failed' %}
+  <div class="notice warn">خلاصه‌سازی ناموفق بود{% if is_admin and item.enrich_error %}: {{ item.enrich_error }}{% endif %}.</div>
+  {% else %}
+  <div class="notice">خلاصهٔ فارسی برای این آیتم تولید نشده (کلید LLM تنظیم نشده یا امتیاز اولیه پایین بوده).</div>
+  {% endif %}
+
+  {{ m.ideas_block(item) }}
+
+  {% if item.readme_summary_fa %}
+  <section class="readme-fa">
+    <h2>{% if item.kind == 'github_release' %}خلاصهٔ تغییرات{% else %}خلاصهٔ README{% endif %}</h2>
+    <div class="prose">{{ item.readme_summary_fa|replace('\n', '<br>')|safe }}</div>
+  </section>
+  {% endif %}
+
+  {% if star_history and star_history|length > 1 %}
+  <section class="stars-chart">
+    <h2>روند ستاره‌ها</h2>
+    {{ star_svg|safe }}
+    <div class="muted small">{{ star_history|length|fa }} نقطه در {{ star_days|fa }} روز گذشته</div>
+  </section>
+  {% endif %}
+
+  {% if item.original_text %}
+  <details class="original" {% if not item.summary_fa %}open{% endif %}>
+    <summary>متن اصلی</summary>
+    <div class="prose" dir="auto">{{ item.original_text }}</div>
+  </details>
+  {% endif %}
+  {% if item.readme_excerpt %}
+  <details class="original">
+    <summary>بخشی از README (انگلیسی)</summary>
+    <pre class="readme-raw" dir="ltr">{{ item.readme_excerpt }}</pre>
+  </details>
+  {% endif %}
+
+  {% if item.topics %}<div class="card-tags">{% for t in item.topics[:15] %}<a class="chip" dir="ltr" href="/?q={{ t|urlencode }}">#{{ t }}</a>{% endfor %}</div>{% endif %}
+  {% if item.tags %}<div class="card-tags">{% for t in item.tags %}<a class="chip" href="/?q={{ t|urlencode }}">{{ t }}</a>{% endfor %}</div>{% endif %}
+
+  {% if linked %}
+  <section class="linked">
+    <h2>بحث‌ها و پوشش خبری دربارهٔ همین ریپو</h2>
+    <div class="grid">{% for l in linked %}{{ m.card(l) }}{% endfor %}</div>
+  </section>
+  {% endif %}
+
+  {% if related %}
+  <section class="related">
+    <h2>مرتبط</h2>
+    <div class="grid">{% for r in related %}{{ m.card(r) }}{% endfor %}</div>
+  </section>
+  {% endif %}
+
+  <div class="muted small detail-foot">
+    {% if item.enrich_model %}خلاصه و ایده‌ها با {{ item.enrich_model }} تولید شده و ممکن است خطا داشته باشد. {% endif %}
+    شناسهٔ آیتم: {{ item.id|fa }} · <a href="/api/items/{{ item.id }}">JSON</a>
+  </div>
+</article>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block content %}
+<div class="result-head">
+  <h1 class="section-title">ترند گیت‌هاب</h1>
+  <div class="chips">
+    <a class="chip {% if period == 'daily' %}on{% endif %}" href="/trending?period=daily">امروز</a>
+    <a class="chip {% if period == 'weekly' %}on{% endif %}" href="/trending?period=weekly">این هفته</a>
+    <a class="chip {% if period == 'monthly' %}on{% endif %}" href="/trending?period=monthly">این ماه</a>
+  </div>
+</div>
+
+{% if spikes %}
+<section class="spikes">
+  <h2 class="section-title">🚀 جهش‌های ستاره (۷ روز)</h2>
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>ریپو</th><th>رشد</th><th>ستاره</th><th>زبان</th><th>خلاصه</th></tr></thead>
+      <tbody>
+      {% for s in spikes %}
+        <tr>
+          <td dir="ltr"><a href="/item/{{ s.id }}">{{ s.repo_full_name }}</a></td>
+          <td class="num">+{{ s.spike_delta|fanum }} <span class="muted">({{ (s.spike_ratio*100)|round|int|fa }}٪)</span></td>
+          <td class="num">{{ s.stars|fanum }}</td>
+          <td>{{ m.lang_dot(s.language) }}</td>
+          <td class="cell-summary">{{ (s.summary_fa or s.original_text)|truncate_words(140) }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+
+{% if items %}
+<div class="table-wrap">
+  <table class="table trending-table">
+    <thead><tr><th>#</th><th>ریپو</th><th>رشد</th><th>ستاره</th><th>زبان</th><th>خلاصه</th></tr></thead>
+    <tbody>
+    {% for it in items %}
+      <tr>
+        <td class="num">{{ loop.index|fa }}</td>
+        <td><a href="/item/{{ it.id }}"><span dir="ltr">{{ it.repo_full_name }}</span></a>{% if it.title_fa %}<div class="muted small">{{ it.title_fa }}</div>{% endif %}</td>
+        <td class="num up">+{{ ({'daily': it.stars_delta_day, 'weekly': it.stars_delta_week, 'monthly': it.stars_delta_month}[period])|fanum }}</td>
+        <td class="num">{{ it.stars|fanum }}</td>
+        <td>{{ m.lang_dot(it.language) }}</td>
+        <td class="cell-summary">{{ (it.summary_fa or it.original_text)|truncate_words(160) }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="empty"><p>هنوز دادهٔ ترند برای این بازه جمع نشده است.</p></div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<article class="prose about">
+  <h1>درباره</h1>
+  <p>{{ settings.site_name }} هر چند ساعت یک‌بار گیت‌هاب (ترند روزانه/هفتگی/ماهانه، جست‌وجوی ریپوهای تازهٔ AI، ریلیز ریپوهای مهم و جهش ستاره‌ها)، Hacker News، Hugging Face و چند فید معتبر را می‌خواند، تکراری‌ها را حذف می‌کند و برای آیتم‌های مهم با یک مدل زبانی خلاصهٔ فارسی، دسته‌بندی، امتیاز اهمیت و ایده‌های ساخت تولید می‌کند.</p>
+  <h2>آمار</h2>
+  <ul>
+    <li>کل آیتم‌ها: {{ stats.total|fanum }}</li>
+    <li>آیتم‌های ۲۴ ساعت گذشته: {{ stats.last_24h|fanum }}</li>
+    <li>خلاصه‌های فارسی: {{ stats.translated|fanum }}</li>
+    <li>ریپوهای رصدشده: {{ stats.repos|fanum }}</li>
+  </ul>
+  <h2>خروجی‌ها</h2>
+  <ul>
+    <li><a href="/feed.xml">RSS فارسی</a> (قابل فیلتر با همان پارامترهای صفحهٔ اصلی، مثلاً <code dir="ltr">/feed.xml?category=agent</code>)</li>
+    <li><a href="/api/docs">JSON API</a>: <code dir="ltr">/api/items</code>، <code dir="ltr">/api/items/{id}</code>، <code dir="ltr">/api/trending</code>، <code dir="ltr">/api/releases</code>، <code dir="ltr">/api/ideas</code>، <code dir="ltr">/api/spikes</code></li>
+  </ul>
+  <p class="muted">خلاصه‌ها و ایده‌ها تولید ماشینی‌اند و ممکن است اشتباه داشته باشند؛ همیشه به منبع اصلی مراجعه کنید.</p>
+</article>
+{% endblock %}

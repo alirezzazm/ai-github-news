@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block content %}
+{% include "admin/_nav.html" %}
+<h1 class="section-title">لاگ اجرا</h1>
+<section class="panel">
+  <h2>کارها</h2>
+  <div class="table-wrap">
+  <table class="table small">
+    <thead><tr><th>#</th><th>کار</th><th>شروع</th><th>مدت</th><th>وضعیت</th><th>پیام</th><th>آمار</th></tr></thead>
+    <tbody>
+    {% for r in runs %}
+      <tr>
+        <td class="num">{{ r.id|fa }}</td>
+        <td>{{ r.job }}</td>
+        <td title="{{ r.started_at }}">{{ r.started_at|ago }}</td>
+        <td class="num">{% if r.finished_at %}{{ ((r.finished_at - r.started_at).total_seconds())|round|int|fa }}s{% else %}…{% endif %}</td>
+        <td><span class="{{ 'ok' if r.status == 'ok' else 'warn' }}">{{ r.status }}</span></td>
+        <td dir="auto">{{ r.message }}</td>
+        <td class="mono small" dir="ltr">{{ r.stats|tojson if r.stats else '' }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</section>
+<section class="panel">
+  <h2>صف دستورها</h2>
+  <div class="table-wrap">
+  <table class="table small">
+    <thead><tr><th>#</th><th>دستور</th><th>وضعیت</th><th>ایجاد</th><th>پایان</th><th>نتیجه</th></tr></thead>
+    <tbody>
+    {% for c in cmds %}
+      <tr>
+        <td class="num">{{ c.id|fa }}</td>
+        <td>{{ c.name }} <span class="mono muted small" dir="ltr">{{ c.payload|tojson if c.payload else '' }}</span></td>
+        <td><span class="{{ 'ok' if c.status == 'done' else ('warn' if c.status == 'error' else '') }}">{{ c.status }}</span></td>
+        <td>{{ c.created_at|ago }}</td>
+        <td>{{ c.finished_at|ago if c.finished_at else '—' }}</td>
+        <td class="mono small" dir="ltr">{{ c.result|truncate_words(300) }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</section>
+{% endblock %}

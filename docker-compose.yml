@@ -1,0 +1,79 @@
+name: ai-github-news
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-aignews}
+      POSTGRES_USER: ${POSTGRES_USER:-aignews}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      TZ: Asia/Tehran
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-aignews} -d ${POSTGRES_DB:-aignews}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    logging: &logging
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+  web:
+    build: .
+    image: ai-github-news:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-aignews}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-aignews}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${WEB_BIND:-127.0.0.1}:${WEB_PORT:-4200}:8000"
+    logging: *logging
+
+  worker:
+    image: ai-github-news:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-aignews}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-aignews}
+    command: ["python", "-m", "app.worker"]
+    depends_on:
+      db:
+        condition: service_healthy
+      web:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "test $(find /tmp/worker.heartbeat -mmin -10 2>/dev/null | wc -l) -ge 1"]
+      interval: 60s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    logging: *logging
+
+  backup:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      PGHOST: db
+      PGUSER: ${POSTGRES_USER:-aignews}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB:-aignews}
+      BACKUP_HOUR: ${BACKUP_HOUR:-3}
+      BACKUP_MINUTE: ${BACKUP_MINUTE:-30}
+      BACKUP_KEEP: ${BACKUP_KEEP:-7}
+      TZ: Asia/Tehran
+    volumes:
+      - ./backups:/backups
+      - ./scripts/backup.sh:/backup.sh:ro
+    entrypoint: ["sh", "/backup.sh"]
+    depends_on:
+      db:
+        condition: service_healthy
+    logging: *logging
+
+volumes:
+  pgdata:

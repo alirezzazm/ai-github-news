@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block content %}
+<div class="result-head">
+  <h1 class="section-title">ریلیزهای تازه</h1>
+  <span class="muted">ریپوهای watch‌شده · ۱۴ روز گذشته {% if is_admin %}· <a href="/admin/sources">ویرایش فهرست</a>{% endif %}</span>
+</div>
+{% if items %}
+<div class="release-list">
+  {% for it in items %}
+  <article class="release {% if 'prerelease' in (it.flags or []) %}pre{% endif %}">
+    <div class="release-head">
+      <a class="repo-link" dir="ltr" href="https://github.com/{{ it.repo_full_name }}" target="_blank" rel="noopener">{{ it.repo_full_name }}</a>
+      <span class="badge tag" dir="ltr">{{ it.release_tag }}</span>
+      {% if 'prerelease' in (it.flags or []) %}<span class="badge untranslated">پیش‌انتشار</span>{% endif %}
+      {{ m.importance(it) }}
+      <time class="muted">{{ (it.published_at or it.first_seen_at)|ago }}</time>
+    </div>
+    <h2 class="release-title"><a href="/item/{{ it.id }}">{{ it.display_title }}</a></h2>
+    <p class="card-summary">{% if it.summary_fa %}{{ it.summary_fa }}{% else %}<span dir="auto">{{ it.original_text|truncate_words(300) }}</span>{% endif %}</p>
+    {% if it.tags %}<div class="card-tags">{% for t in it.tags[:5] %}<span class="chip">{{ t }}</span>{% endfor %}</div>{% endif %}
+  </article>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty"><p>هنوز ریلیزی جمع نشده است.</p></div>
+{% endif %}
+{% endblock %}

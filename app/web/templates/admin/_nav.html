@@ -1,0 +1,9 @@
+<nav class="admin-nav" aria-label="مدیریت">
+  <a href="/admin" {% if request.url.path == '/admin' %}class="active"{% endif %}>پیشخوان</a>
+  <a href="/admin/sources" {% if request.url.path.startswith('/admin/sources') %}class="active"{% endif %}>منابع</a>
+  <a href="/admin/settings" {% if request.url.path.startswith('/admin/settings') %}class="active"{% endif %}>تنظیمات</a>
+  <a href="/admin/items" {% if request.url.path.startswith('/admin/items') %}class="active"{% endif %}>آیتم‌ها</a>
+  <a href="/admin/usage" {% if request.url.path.startswith('/admin/usage') %}class="active"{% endif %}>مصرف LLM</a>
+  <a href="/admin/logs" {% if request.url.path.startswith('/admin/logs') %}class="active"{% endif %}>لاگ</a>
+  <form method="post" action="/admin/logout" class="inline"><button class="btn ghost small" type="submit">خروج</button></form>
+</nav>

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+{% include "admin/_nav.html" %}
+<h1 class="section-title">تنظیمات</h1>
+<p class="muted">مقدارهایی که این‌جا ذخیره می‌کنید بر .env اولویت دارند و در پایگاه داده می‌مانند. برای برگشت به مقدار .env، تیک «پاک کردن» را بزنید. مقادیر محرمانه پوشیده نمایش داده می‌شوند؛ اگر دست نخورند، تغییر نمی‌کنند.</p>
+
+<form method="post" action="/admin/settings" class="form settings-form">
+  {% for r in rows %}
+  <div class="field">
+    <label for="f-{{ r.key }}">{{ r.label }} <span class="mono small muted" dir="ltr">{{ r.key }}</span>
+      {% if r.overridden %}<span class="badge cat">از پنل</span>{% elif r.has_value %}<span class="badge kind">از .env</span>{% endif %}
+    </label>
+    <div class="field-row">
+      <input id="f-{{ r.key }}" type="{{ 'password' if r.secret else 'text' }}" name="{{ r.key }}" value="{{ r.value }}" dir="ltr" autocomplete="off" {% if r.secret %}placeholder="{{ r.value or 'وارد کنید…' }}"{% endif %}>
+      {% if r.overridden %}<label class="check small"><input type="checkbox" name="clear_{{ r.key }}" value="1"> پاک کردن</label>{% endif %}
+    </div>
+  </div>
+  {% endfor %}
+  <button class="btn primary" type="submit">ذخیره</button>
+</form>
+
+<section class="panel">
+  <h2>آزمایش</h2>
+  <div class="btn-row">
+    <form method="post" action="/admin/settings/test-llm"><button class="btn">تست LLM (یک درخواست کوچک)</button></form>
+    <form method="post" action="/admin/settings/test-notify"><button class="btn">تست اعلان بله/تلگرام</button></form>
+  </div>
+  <h3>راهنما</h3>
+  <ul class="small muted">
+    <li>Anthropic: کلید را از console.anthropic.com بگیرید. مدل پیش‌فرض <code dir="ltr">claude-opus-5-5</code> است؛ برای هزینهٔ بسیار کمتر در ترجمهٔ انبوه می‌توانید <code dir="ltr">claude-haiku-5-5</code> یا <code dir="ltr">claude-sonnet-5-5</code> را بگذارید.</li>
+    <li>OpenAI‑compatible: برای OpenRouter آدرس <code dir="ltr">https://openrouter.ai/api/v1</code>، برای Groq <code dir="ltr">https://api.groq.com/openai/v1</code>، برای Ollama محلی <code dir="ltr">http://ollama:11434/v1</code> (کلید لازم نیست).</li>
+    <li>ترتیب ارائه‌دهنده‌ها یعنی اولویت و fallback؛ مثلاً <code dir="ltr">anthropic,openai</code>.</li>
+    <li>توکن GitHub: یک Fine-grained PAT فقط‌خواندنی (Public repositories, read-only) کافی است؛ سقف درخواست را از ۶۰ به ۵۰۰۰ در ساعت می‌برد و GraphQL ردیاب ستاره‌ها را فعال می‌کند.</li>
+    <li>بله: توکن بات از @botfather بله؛ chat_id شناسهٔ عددی چت یا کانال.</li>
+  </ul>
+</section>
+{% endblock %}

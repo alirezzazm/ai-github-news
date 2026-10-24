@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block content %}
+{% include "admin/_nav.html" %}
+<h1 class="section-title">منابع</h1>
+<p class="muted">هر منبع را می‌توانید روشن/خاموش کنید، همین حالا اجرا کنید یا تنظیماتش (JSON) را تغییر دهید. برای ریپوهای watch و کوئری‌های جست‌وجو فرم ساده‌تر زیر هر منبع هست.</p>
+
+<div class="source-list">
+{% for s in sources %}
+<section class="panel source {{ '' if s.enabled else 'off' }}" id="src-{{ s.id }}">
+  <header class="source-head">
+    <div>
+      <h2>{{ s.name }} <span class="badge kind">{{ kind_labels.get(s.kind, s.kind) }}</span></h2>
+      <div class="small muted">کلید: <span class="mono" dir="ltr">{{ s.key }}</span> · وزن {{ s.weight }} · آخرین اجرا: {{ s.last_run_at|ago if s.last_run_at else '—' }} ·
+        {% if s.last_status == 'error' %}<span class="warn">خطا: {{ s.last_error }}</span>{% elif s.last_status %}<span class="ok">{{ s.items_last_run|fa }} آیتم</span>{% endif %}</div>
+    </div>
+    <div class="btn-row">
+      <form method="post" action="/admin/sources/{{ s.id }}/toggle"><button class="btn {{ 'ghost' if s.enabled else 'primary' }}">{{ 'غیرفعال کن' if s.enabled else 'فعال کن' }}</button></form>
+      <form method="post" action="/admin/sources/{{ s.id }}/run"><button class="btn">اجرا</button></form>
+      {% if s.kind == 'rss' %}<form method="post" action="/admin/sources/{{ s.id }}/delete" onsubmit="return confirm('حذف شود؟')"><button class="btn ghost danger">حذف</button></form>{% endif %}
+    </div>
+  </header>
+
+  {% if s.kind == 'github_releases' %}
+  <form method="post" action="/admin/sources/{{ s.id }}/list" class="form">
+    <label>ریپوهای watch (هر خط یکی، به شکل owner/repo)
+      <textarea name="lines" rows="8" dir="ltr" class="mono">{{ (s.config.get('repos') or [])|join('\n') }}</textarea></label>
+    <input type="hidden" name="field" value="repos">
+    <button class="btn">ذخیرهٔ فهرست</button>
+  </form>
+  {% elif s.kind == 'github_search' %}
+  <form method="post" action="/admin/sources/{{ s.id }}/list" class="form">
+    <label>کوئری‌های جست‌وجو (هر خط یکی؛ اختیاری: «برچسب | کوئری»)
+      <textarea name="lines" rows="8" dir="ltr" class="mono">{% for q in s.config.get('queries') or [] %}{% if q is mapping %}{{ q.get('label','') }} | {{ q.q }}{% else %}{{ q }}{% endif %}
+{% endfor %}</textarea></label>
+    <input type="hidden" name="field" value="queries">
+    <button class="btn">ذخیرهٔ فهرست</button>
+  </form>
+  {% elif s.kind == 'github_trending' %}
+  <form method="post" action="/admin/sources/{{ s.id }}/list" class="form">
+    <label>زبان‌ها (هر خط یکی؛ خط خالی = همهٔ زبان‌ها)
+      <textarea name="lines" rows="6" dir="ltr" class="mono">{{ (s.config.get('languages') if s.config.get('languages') is not none else settings.trending_languages)|join('\n') }}</textarea></label>
+    <input type="hidden" name="field" value="languages">
+    <button class="btn">ذخیرهٔ فهرست</button>
+  </form>
+  {% endif %}
+
+  <details>
+    <summary class="small">تنظیمات پیشرفته (JSON)</summary>
+    <form method="post" action="/admin/sources/{{ s.id }}/config" class="form">
+      <label>config <textarea name="config" rows="6" dir="ltr" class="mono">{{ s.config|tojson(indent=1) }}</textarea></label>
+      <label>وزن (۰٫۱ تا ۳) <input type="number" step="0.1" min="0.1" max="3" name="weight" value="{{ s.weight }}"></label>
+      <button class="btn">ذخیره</button>
+    </form>
+  </details>
+</section>
+{% endfor %}
+</div>
+
+<section class="panel">
+  <h2>افزودن فید RSS</h2>
+  <form method="post" action="/admin/sources/add-rss" class="form inline-form">
+    <label>نام <input type="text" name="name" required placeholder="مثلاً Ars Technica AI"></label>
+    <label>آدرس <input type="url" name="url" required dir="ltr" placeholder="https://…/feed"></label>
+    <button class="btn primary">افزودن</button>
+  </form>
+</section>
+{% endblock %}

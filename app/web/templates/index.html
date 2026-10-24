@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block content %}
+{% if editorial %}
+<section class="editorial">
+  <div class="editorial-head">
+    <span class="badge edit">سرمقالهٔ امروز</span>
+    <span class="muted">{{ editorial.day|jalali }} · تولیدشده با {{ editorial.model }}</span>
+  </div>
+  <h2>{{ editorial.title_fa }}</h2>
+  <div class="editorial-body">{{ editorial.body_fa|replace('\n', '<br>')|safe }}</div>
+</section>
+{% endif %}
+
+<section class="hero">
+  <div class="stats">
+    <div class="stat"><b>{{ stats.last_24h|fanum }}</b><span>آیتم در ۲۴ ساعت گذشته</span></div>
+    <div class="stat"><b>{{ stats.translated|fanum }}</b><span>خلاصهٔ فارسی</span></div>
+    <div class="stat"><b>{{ stats.repos|fanum }}</b><span>ریپوی رصدشده</span></div>
+    <div class="stat"><b>{{ stats.total|fanum }}</b><span>کل آیتم‌ها</span></div>
+  </div>
+  {% if not llm_on %}<div class="notice">کلید LLM تنظیم نشده؛ آیتم‌ها با متن اصلی و برچسب «ترجمه نشده» نمایش داده می‌شوند. {% if is_admin %}<a href="/admin/settings">تنظیم کلید</a>{% endif %}</div>{% endif %}
+</section>
+
+{% if spikes %}
+<section class="spikes">
+  <h2 class="section-title">🚀 جهش ستاره</h2>
+  <div class="spike-row">
+    {% for s in spikes %}
+    <a class="spike-card" href="/item/{{ s.id }}">
+      <div class="spike-name" dir="ltr">{{ s.repo_full_name }}</div>
+      <div class="spike-meta">+{{ s.spike_delta|compact }} <span class="muted">در ۷ روز</span> · ★ {{ s.stars|compact }}</div>
+      {% if s.title_fa %}<div class="spike-title">{{ s.title_fa }}</div>{% endif %}
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section class="filters" id="filters">
+  <form method="get" action="/" class="filter-form">
+    <input type="hidden" name="q" value="{{ filters.q }}">
+    <div class="filter-row">
+      <div class="chips" role="tablist" aria-label="بازهٔ زمانی">
+        {% for key, label in PERIOD_LABELS.items() %}
+        <a class="chip {% if filters.period == key %}on{% endif %}" href="/?{{ filters.as_query(period=key, page=1) }}">{{ label }}</a>
+        {% endfor %}
+      </div>
+      <div class="chips" aria-label="نوع">
+        <a class="chip {% if not filters.kind %}on{% endif %}" href="/?{{ filters.as_query(kind='', page=1) }}">همه</a>
+        {% for key, label in KIND_LABELS.items() %}
+        <a class="chip {% if filters.kind == key %}on{% endif %}" href="/?{{ filters.as_query(kind=key, page=1) }}">{{ label }}</a>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="filter-row">
+      <div class="chips" aria-label="دسته">
+        <a class="chip {% if not filters.category %}on{% endif %}" href="/?{{ filters.as_query(category='', page=1) }}">همهٔ دسته‌ها</a>
+        {% for key, label in CATEGORIES.items() %}{% if cat_counts.get(key) or filters.category == key %}
+        <a class="chip {% if filters.category == key %}on{% endif %}" href="/?{{ filters.as_query(category=key, page=1) }}">{{ label }} <small>{{ cat_counts.get(key, 0)|fa }}</small></a>
+        {% endif %}{% endfor %}
+      </div>
+    </div>
+    <div class="filter-row">
+      <div class="chips" aria-label="زبان">
+        <a class="chip {% if not filters.language %}on{% endif %}" href="/?{{ filters.as_query(lang='', page=1) }}">همهٔ زبان‌ها</a>
+        {% for lang, n in languages %}
+        <a class="chip {% if filters.language|lower == lang|lower %}on{% endif %}" href="/?{{ filters.as_query(lang=lang, page=1) }}"><i class="dot" data-lang="{{ lang|lower }}"></i>{{ lang }}</a>
+        {% endfor %}
+      </div>
+      <div class="filter-tail">
+        <label class="select"><span>ترتیب</span>
+          <select name="sort" onchange="this.form.submit()">
+            {% for key, label in SORTS.items() %}<option value="{{ key }}" {% if filters.sort == key %}selected{% endif %}>{{ label }}</option>{% endfor %}
+          </select>
+        </label>
+        <label class="check"><input type="checkbox" name="translated" value="1" {% if filters.translated_only %}checked{% endif %} onchange="this.form.submit()"> فقط ترجمه‌شده</label>
+        <input type="hidden" name="period" value="{{ filters.period }}">
+        <input type="hidden" name="kind" value="{{ filters.kind }}">
+        <input type="hidden" name="category" value="{{ filters.category }}">
+        <input type="hidden" name="lang" value="{{ filters.language }}">
+        <input type="hidden" name="flag" value="{{ filters.flag }}">
+        <a class="rss-link" href="/feed.xml?{{ filters.as_query() }}" title="RSS این فیلتر">RSS</a>
+      </div>
+    </div>
+  </form>
+</section>
+
+<div class="result-head">
+  {% if filters.q %}<h1 class="section-title">نتایج «{{ filters.q }}»</h1>{% else %}<h1 class="section-title">خبرهای {{ PERIOD_LABELS[filters.period] }}</h1>{% endif %}
+  <span class="muted">{{ total|fanum }} آیتم</span>
+</div>
+
+{% if items %}
+<div class="grid">
+  {% for item in items %}{{ m.card(item) }}{% endfor %}
+</div>
+{{ m.pagination(filters, pages) }}
+{% else %}
+<div class="empty">
+  <p>چیزی پیدا نشد.</p>
+  <p class="muted">اگر تازه راه‌اندازی کرده‌اید، worker باید اولین دور جمع‌آوری را تمام کند (چند دقیقه). {% if is_admin %}<a href="/admin">وضعیت در پنل مدیریت</a>{% endif %}</p>
+</div>
+{% endif %}
+{% endblock %}

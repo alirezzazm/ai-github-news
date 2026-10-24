@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="result-head">
+  <h1 class="section-title">نشان‌شده‌ها</h1>
+  <div class="chips">
+    <button class="chip" type="button" data-bm-export>خروجی JSON</button>
+    <button class="chip danger" type="button" data-bm-clear>پاک کردن همه</button>
+  </div>
+</div>
+<p class="muted">نشان‌ها فقط در همین مرورگر (localStorage) ذخیره می‌شوند.</p>
+<div id="bookmarks" class="grid" data-bookmarks-list>
+  <div class="empty"><p>در حال بارگذاری…</p></div>
+</div>
+<template id="bm-card">
+  <article class="card">
+    <div class="card-head"><div class="card-badges"><span class="badge kind"></span><span class="badge cat"></span></div>
+      <div class="card-tools"><button class="bm on" type="button" aria-label="حذف نشان"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg></button></div></div>
+    <h3 class="card-title"><a href="#"></a></h3>
+    <p class="card-summary"></p>
+    <div class="card-meta"></div>
+  </article>
+</template>
+{% endblock %}

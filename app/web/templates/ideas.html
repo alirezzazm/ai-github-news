@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block content %}
+<div class="result-head">
+  <h1 class="section-title">ایده‌های امروز</h1>
+  <span class="muted">«با این چی می‌شه ساخت؟» از آیتم‌های دو روز گذشته</span>
+</div>
+{% if items %}
+<div class="ideas-grid">
+  {% for it in items %}
+  <section class="idea-group">
+    <header>
+      <a href="/item/{{ it.id }}" class="idea-src">{{ it.display_title }}</a>
+      <div class="muted small">{{ m.kind_badge(it) }} {% if it.repo_full_name %}<span dir="ltr">{{ it.repo_full_name }}</span>{% endif %} {{ m.importance(it) }}</div>
+    </header>
+    <ol>
+      {% for idea in it.ideas %}
+      <li>
+        <strong>{{ idea.title }}</strong>
+        {% if idea.description %}<p>{{ idea.description }}</p>{% endif %}
+        {% if idea.stack %}<span class="stack" dir="auto">{{ idea.stack }}</span>{% endif %}
+      </li>
+      {% endfor %}
+    </ol>
+  </section>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty"><p>هنوز ایده‌ای تولید نشده است. ایده‌ها با LLM ساخته می‌شوند؛ کلید را در پنل مدیریت تنظیم کنید.</p></div>
+{% endif %}
+{% endblock %}
