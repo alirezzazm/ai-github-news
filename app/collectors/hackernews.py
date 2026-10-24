@@ -154,17 +154,23 @@ def _via_firebase(client, max_stories: int) -> list[RawItem]:
     return [x for x in (story_to_raw(s or {}) for s in stories) if x]
 
 
-def _via_html(client, pages: int = 4) -> list[RawItem]:
+def _via_html(client, pages: int = 3) -> list[RawItem]:
+    """news.ycombinator.com throttles quick crawls (HTTP 419), so go slowly and retry once."""
     entries: dict[int, dict] = {}
-    urls = [f"{HN_SITE}/news?p={p}" for p in range(1, pages + 1)] + [f"{HN_SITE}/best?p={p}" for p in (1, 2)]
+    urls = [f"{HN_SITE}/news?p={p}" for p in range(1, pages + 1)] + [f"{HN_SITE}/best"]
     for url in urls:
-        resp = plain_get(client, url, browser=True)
+        resp = plain_get(client, url, browser=True, retries=0)
+        if resp.status_code in (419, 429, 503):
+            time.sleep(12)
+            resp = plain_get(client, url, browser=True, retries=0)
         if resp.status_code != 200:
             log.warning("HN html %s -> %s", url, resp.status_code)
+            if resp.status_code in (419, 429):
+                break  # throttled: stop hammering, let the next transport take over
             continue
         for e in parse_hn_html(resp.text):
             entries.setdefault(e["id"], e)
-        time.sleep(1.0)
+        time.sleep(3.0)
     if not entries:
         raise RuntimeError("HN HTML returned no stories")
     return [listing_to_raw(e) for e in entries.values()]
