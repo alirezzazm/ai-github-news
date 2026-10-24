@@ -30,7 +30,7 @@ DEFAULT_FEEDS = [
     {"key": "rss_arxiv_cl", "name": "arXiv cs.CL", "url": "https://rss.arxiv.org/rss/cs.CL", "weight": 0.5, "max_items": 25},
     {"key": "rss_arxiv_lg", "name": "arXiv cs.LG", "url": "https://rss.arxiv.org/rss/cs.LG", "weight": 0.5, "max_items": 25},
     {"key": "rss_ars_ai", "name": "Ars Technica AI", "url": "https://arstechnica.com/ai/feed/", "weight": 1.0},
-    {"key": "rss_reddit_localllama", "name": "Reddit r/LocalLLaMA", "url": "https://www.reddit.com/r/LocalLLaMA/top/.rss?t=day", "weight": 0.9, "max_items": 25},
+    {"key": "rss_reddit_localllama", "name": "Reddit r/LocalLLaMA", "url": "https://www.reddit.com/r/LocalLLaMA/top/.rss?t=day", "weight": 0.9, "max_items": 25, "enabled": False},
     {"key": "rss_reddit_ml", "name": "Reddit r/MachineLearning", "url": "https://www.reddit.com/r/MachineLearning/top/.rss?t=day", "weight": 0.8, "max_items": 20, "enabled": False},
     {"key": "rss_devto_ai", "name": "dev.to #ai", "url": "https://dev.to/feed/tag/ai", "weight": 0.7, "max_items": 20},
     {"key": "rss_lobsters_ai", "name": "Lobsters AI", "url": "https://lobste.rs/t/ai.rss", "weight": 0.8},

@@ -14,9 +14,9 @@
 | GitHub Search | Search API با `topic:llm`، `topic:ai-agents`، `topic:rag`، `topic:mcp`، `claude`، `openai` … | دو حالت: ریپوهای **تازه** (`created:>`) و **فعال** (`pushed:>` + ستارهٔ بالا) |
 | ریلیزها | `/repos/{o}/{r}/releases` برای فهرست watch (قابل ویرایش در پنل) | با ETag؛ پیش‌انتشارها برچسب می‌خورند |
 | ردیاب ستاره | GraphQL دسته‌ای (۸۰ ریپو در هر درخواست) برای همهٔ ریپوهای ۳۰ روز اخیر | تاریخچه در `star_snapshots`؛ **جهش ستاره** (+۳۰۰ و +۲۵٪ در ۷ روز) پرچم می‌خورد؛ نمودار ستاره در صفحهٔ هر ریپو |
-| Hacker News | API رسمی Firebase (top + best) | حداقل امتیاز قابل تنظیم؛ آیتم‌های AI پرچم می‌گیرند |
+| Hacker News | API رسمی Firebase (top + best)؛ اگر فیلتر بود، خودکار به HTML سایت HN و سپس HNPWA می‌رود | حداقل امتیاز قابل تنظیم؛ آیتم‌های AI پرچم می‌گیرند |
 | Hugging Face | مدل‌های ترند + Daily Papers | مقاله‌هایی که ریپوی گیت‌هاب دارند به همان ریپو وصل می‌شوند |
-| RSS/Atom | ۲۲ فید پیش‌فرض (TechCrunch AI، The Verge AI، HF Blog، OpenAI، Anthropic، Google AI/DeepMind، arXiv cs.AI/CL/LG، Simon Willison، GitHub Blog، Reddit r/LocalLLaMA، .NET Blog، …) | هر فید یک منبع جداست؛ در پنل اضافه/حذف/خاموش می‌شود |
+| RSS/Atom | ۲۲ فید پیش‌فرض (فیدهای Reddit به‌خاطر فیلترینگ روی سرورهای ایران پیش‌فرض خاموش‌اند) (TechCrunch AI، The Verge AI، HF Blog، OpenAI، Anthropic، Google AI/DeepMind، arXiv cs.AI/CL/LG، Simon Willison، GitHub Blog، Reddit r/LocalLLaMA، .NET Blog، …) | هر فید یک منبع جداست؛ در پنل اضافه/حذف/خاموش می‌شود |
 
 **اتصال بین منابع:** هر خبر HN، مقاله یا paper که به `github.com/owner/repo` اشاره کند، زیر صفحهٔ همان ریپو در بخش «بحث‌ها و پوشش خبری» دیده می‌شود.
 

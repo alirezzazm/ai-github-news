@@ -70,6 +70,12 @@ def main() -> None:
             cmd.status = "queued"
             cmd.started_at = None
             log.info("re-queued interrupted command %s (#%d)", cmd.name, cmd.id)
+        from app.models import RunLog, utcnow
+
+        for run in db.scalars(select(RunLog).where(RunLog.status == "running")).all():
+            run.status = "error"
+            run.message = "interrupted by worker restart"
+            run.finished_at = utcnow()
 
     # First full cycle shortly after boot if the DB is empty-ish
     with session_scope() as db:

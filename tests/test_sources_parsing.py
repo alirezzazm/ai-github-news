@@ -1,4 +1,4 @@
-from app.collectors.hackernews import story_to_raw
+from app.collectors.hackernews import listing_to_raw, parse_hn_html, story_to_raw
 from app.collectors.huggingface import model_to_raw, paper_to_raw
 from app.collectors.linking import extract_repo_full_name
 from app.collectors.prescore import compute_prescore, is_ai_related
@@ -57,3 +57,41 @@ def test_prescore_prefers_growth_and_ai():
     rel = Item(kind="github_release", title="x v2.0.0", stars=20000, release_tag="v2.0.0")
     pre = Item(kind="github_release", title="x v2.0.0-rc1", stars=20000, release_tag="v2.0.0-rc1")
     assert compute_prescore(rel) > compute_prescore(pre)
+
+
+def test_parse_hn_html_fixture(fixtures_dir):
+    html = (fixtures_dir / "hn_front.html").read_text(encoding="utf-8")
+    rows = parse_hn_html(html)
+    assert 25 <= len(rows) <= 30
+    first = rows[0]
+    assert first["id"] == 50219666 and first["points"] == 44 and first["comments"] == 16
+    assert first["author"] == "rramadass" and first["url"].startswith("https://www.southampton.ac.uk/")
+    assert first["published_at"] is not None and first["published_at"].year == 2026
+    second = rows[1]
+    assert second["url"] == "https://github.com/obsproject/obs-studio/releases/tag/33.0.0" and second["points"] == 166
+    raw = listing_to_raw(second)
+    assert raw.external_id == "hn:50218430" and raw.comments_url.endswith("item?id=50218430")
+    assert all(r["title"] for r in rows)
+
+
+def test_hn_transport_fallback(db, monkeypatch):
+    from app.collectors import hackernews as hn
+    from app.collectors.seed import seed_sources
+    from app.models import Source
+    from sqlalchemy import select
+
+    seed_sources(db)
+    src = db.scalar(select(Source).where(Source.key == "hackernews"))
+
+    def boom(client, *a, **k):
+        raise ConnectionError("blocked")
+
+    def fake_html(client, *a, **k):
+        return [listing_to_raw({"id": 1, "title": "An LLM story", "url": "https://x.y", "points": 500, "comments": 10, "author": "a", "published_at": None}),
+                listing_to_raw({"id": 2, "title": "Low", "url": None, "points": 3, "comments": 0, "author": "b", "published_at": None})]
+
+    monkeypatch.setattr(hn, "TRANSPORTS", (("firebase", boom), ("html", fake_html)))
+    res = hn.collect(db, src)
+    assert res.created == 1  # the 3-point story is below HN_MIN_POINTS
+    db.refresh(src)
+    assert src.config.get("last_transport") == "html"
