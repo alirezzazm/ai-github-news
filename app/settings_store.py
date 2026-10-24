@@ -26,7 +26,7 @@ def get_setting(db: Session, key: str, default: Any = None) -> Any:
     if db_val not in (None, ""):
         return _coerce(key, db_val)
     settings = get_settings()
-    if default is None and hasattr(settings, key):
+    if hasattr(settings, key):
         return getattr(settings, key)
     return default
 

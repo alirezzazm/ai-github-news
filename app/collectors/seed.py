@@ -58,6 +58,7 @@ def seed_sources(db: Session) -> int:
                 kind=SRC_RSS,
                 config={"url": f["url"], "max_items": f.get("max_items", 40)},
                 weight=f.get("weight", 1.0),
+                enabled=f.get("enabled", True),
             )
         )
     for s in defaults:
