@@ -162,6 +162,13 @@ class Item(Base):
     def category_fa(self) -> str:
         return CATEGORIES.get(self.category or "", "")
 
+    @property
+    def display_time(self) -> datetime:
+        """Repos: when the radar first saw them; news/releases/papers: publish time."""
+        if self.kind == KIND_GITHUB_REPO:
+            return self.first_seen_at
+        return self.published_at or self.first_seen_at
+
 
 Index("ix_items_kind_lastseen", Item.kind, Item.last_seen_at)
 Index("ix_items_hidden_importance", Item.hidden, Item.importance)

@@ -11,6 +11,9 @@ RUN apt-get update \
 
 WORKDIR /srv
 
+# PyPI can be slow/flaky from some networks: long timeout, many retries, optional mirror.
+ARG PIP_INDEX_URL=https://pypi.org/simple
+ENV PIP_INDEX_URL=${PIP_INDEX_URL} PIP_DEFAULT_TIMEOUT=300 PIP_RETRIES=10
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 

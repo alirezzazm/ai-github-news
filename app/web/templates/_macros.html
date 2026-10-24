@@ -36,7 +36,7 @@
   </div>
   <h3 class="card-title"><a href="/item/{{ item.id }}">{{ item.display_title }}</a></h3>
   {% if item.title_fa and item.kind != 'github_repo' %}<div class="card-orig" dir="ltr">{{ item.title }}</div>{% endif %}
-  {% if item.kind in ('github_repo','github_release') and item.repo_full_name %}
+  {% if item.kind in ('github_repo','github_release') and item.repo_full_name and item.display_title != item.repo_full_name %}
     <div class="card-repo" dir="ltr"><a href="{{ item.url }}" target="_blank" rel="noopener">{{ item.repo_full_name }}</a></div>
   {% endif %}
   <p class="card-summary">{% if item.summary_fa %}{{ item.summary_fa }}{% else %}<span dir="auto" class="orig">{{ item.original_text|truncate_words(260) }}</span>{% endif %}</p>
@@ -51,7 +51,7 @@
     {% if item.points %}<span title="امتیاز Hacker News">▲ {{ item.points|fa }}</span>{% endif %}
     {% if item.comments_count %}<a href="{{ item.comments_url or item.url }}" target="_blank" rel="noopener" title="نظرها">💬 {{ item.comments_count|fa }}</a>{% endif %}
     {% if item.kind == 'rss' and item.source_label %}<span class="src">{{ item.source_label }}</span>{% endif %}
-    <time datetime="{{ (item.published_at or item.first_seen_at).isoformat() }}" title="{{ (item.published_at or item.first_seen_at)|jalali }}">{{ (item.published_at or item.first_seen_at)|ago }}</time>
+    <time datetime="{{ item.display_time.isoformat() }}" title="{{ item.display_time|jalali }}">{{ item.display_time|ago }}</time>
   </div>
   {% if item.tags %}<div class="card-tags">{% for t in item.tags[:6] %}<a href="/?q={{ t|urlencode }}" class="chip">{{ t }}</a>{% endfor %}</div>{% endif %}
 </article>

@@ -32,7 +32,7 @@
     {% if item.author %}<span dir="ltr">@{{ item.author }}</span>{% endif %}
     {% if item.raw and item.raw.get('license') %}<span dir="ltr">{{ item.raw.license }}</span>{% endif %}
     {% if item.repo_created_at %}<span title="تاریخ ساخت ریپو">ساخت: {{ item.repo_created_at|jalali }}</span>{% endif %}
-    <time datetime="{{ (item.published_at or item.first_seen_at).isoformat() }}">{{ (item.published_at or item.first_seen_at)|jalali }}</time>
+    <time datetime="{{ item.display_time.isoformat() }}" title="{{ item.display_time|ago }}">{{ item.display_time|jalali }}</time>
     {% if item.source_label %}<span class="src">{{ item.source_label }}</span>{% endif %}
   </div>
 
