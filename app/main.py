@@ -11,6 +11,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi.templating import Jinja2Templates
+from markupsafe import Markup, escape
 
 from app import __version__
 from app.collectors.seed import seed_sources
@@ -34,6 +35,7 @@ def _setup_jinja() -> None:
     env.filters["jalali"] = jalali_date
     env.filters["local"] = to_local
     env.filters["truncate_words"] = truncate
+    env.filters["nl2br"] = lambda text: Markup("<br>\n").join(escape(line) for line in str(text or "").split("\n"))
     env.globals["CATEGORIES"] = CATEGORIES
     env.globals["KIND_LABELS"] = queries.KIND_LABELS
     env.globals["PERIOD_LABELS"] = queries.PERIOD_LABELS

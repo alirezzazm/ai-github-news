@@ -24,6 +24,6 @@ def test_llm_text_is_escaped(client, db):
     db.commit()
     html = client.get(f"/item/{it.id}").text
     assert "<script>alert(1)</script>" not in html
-    assert "onerror=alert" not in html
+    assert "<img" not in html and "&lt;img" in html
     assert "&lt;script&gt;" in html
-    assert "خط اول" in html and "<br>" in html
+    assert "&gt;<br>" in html  # escaped tag followed by a real line break

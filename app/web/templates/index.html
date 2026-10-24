@@ -8,7 +8,7 @@
     <span class="muted">{{ editorial.day|jalali }} · تولیدشده با {{ editorial.model }}</span>
   </div>
   <h2>{{ editorial.title_fa }}</h2>
-  <div class="editorial-body">{{ editorial.body_fa|e|replace('\n', '<br>')|safe }}</div>
+  <div class="editorial-body">{{ editorial.body_fa|nl2br }}</div>
 </section>
 {% endif %}
 
