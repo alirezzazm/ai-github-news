@@ -64,7 +64,7 @@
   {% if item.readme_summary_fa %}
   <section class="readme-fa">
     <h2>{% if item.kind == 'github_release' %}خلاصهٔ تغییرات{% else %}خلاصهٔ README{% endif %}</h2>
-    <div class="prose">{{ item.readme_summary_fa|replace('\n', '<br>')|safe }}</div>
+    <div class="prose">{{ item.readme_summary_fa|e|replace('\n', '<br>')|safe }}</div>
   </section>
   {% endif %}
 
